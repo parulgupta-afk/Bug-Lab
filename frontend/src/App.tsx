@@ -22,6 +22,7 @@ import type { Answer } from './engine/predict'
 import { FixPanel } from './components/FixPanel'
 import { BreakItPanel } from './components/BreakItPanel'
 import { TutorPanel } from './components/TutorPanel'
+import { TestCasesPanel } from './components/TestCasesPanel'
 
 
 function isSorted(arr: readonly number[]): boolean {
@@ -86,6 +87,26 @@ function Debugger({ challenge, solved, onSolved }: DebuggerProps) {
   const fixOptions = useMemo(() => getFixOptions(challenge), [challenge])
   const [selectedFixId, setSelectedFixId] = useState<string | null>(null)
   const [fixResult, setFixResult] = useState<FixResult | null>(null)
+
+  const testVariant = useMemo(() => {
+    if (fixResult?.verdict === 'correct' && selectedFixId) {
+      const opt = fixOptions.find((o) => o.id === selectedFixId)
+      if (opt) return opt.variant
+    }
+    return variant
+  }, [fixResult, selectedFixId, fixOptions, variant])
+
+  const debugTestCase = (arr: number[], tgt: number) => {
+    setRuntime({ array: arr, target: tgt })
+    setArrayInput(arr.join(', '))
+    setTargetInput(String(tgt))
+    setBreakOpen(true)
+    setPlaying(false)
+    setStepIndex(0)
+    setAnswers({})
+    setSuspectLine(null)
+    setFlagResult(null)
+  }
   const beforeSummary = useMemo(() => summarizeTrace(trace), [trace])
   const afterSummary = fixResult ? summarizeTrace(fixResult.fixedTrace) : null
 
@@ -336,6 +357,7 @@ function Debugger({ challenge, solved, onSolved }: DebuggerProps) {
           }}
           onApply={applyFix}
         />
+        <TestCasesPanel variant={testVariant} onDebugCase={debugTestCase} />
         <TutorPanel challengeTitle={challenge.title} code={source} state={state} />
         <TraceTable states={trace.states} stepIndex={stepIndex} onSelect={scrub} />
       </div>
@@ -375,7 +397,7 @@ export default function App() {
             Session · Local
           </span>
           <span className="rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-3 py-1 font-mono text-[10px] text-[var(--muted)]">
-            Phase 4
+            Phase 5
           </span>
         </div>
       </header>

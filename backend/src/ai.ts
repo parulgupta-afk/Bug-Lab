@@ -63,3 +63,53 @@ export function createAnthropicAsk({ apiKey, model, timeoutMs = 20_000 }: Anthro
     return text
   }
 }
+
+export type GeminiOptions = { apiKey: string; model?: string; timeoutMs?: number }
+
+/** Calls the Google Gemini API directly with fetch, so no SDK is needed. */
+export function createGeminiAsk({ apiKey, model = 'gemini-2.5-flash', timeoutMs = 20_000 }: GeminiOptions): AskModel {
+  return async (input) => {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        systemInstruction: {
+          parts: [{ text: SYSTEM_PROMPT }],
+        },
+        contents: [
+          {
+            role: 'user',
+            parts: [{ text: buildPrompt(input) }],
+          },
+        ],
+        generationConfig: {
+          maxOutputTokens: 1000,
+        },
+      }),
+      signal: AbortSignal.timeout(timeoutMs),
+    })
+
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '')
+      throw new Error(`Model API returned HTTP ${res.status}: ${errText}`)
+    }
+
+    const data = (await res.json()) as {
+      candidates?: Array<{
+        content?: {
+          parts?: Array<{ text?: string }>
+        }
+      }>
+    }
+
+    const text = data.candidates?.[0]?.content?.parts
+      ?.map((part) => part.text ?? '')
+      .join('')
+      .trim()
+
+    if (!text) throw new Error('Model API returned no text')
+    return text
+  }
+}
+

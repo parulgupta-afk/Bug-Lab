@@ -69,6 +69,12 @@ Without a key the API still starts and `POST /api/tutor` answers `503 ai-disable
 - Third challenge: *Break the Assumptions* (correct code on unsorted input).
 - Optional AI tutor (`POST /api/tutor`); core experience works offline.
 
+**Phase 5: Smart Test Cases**
+- Built-in suite (normal, boundary, edge, missing, duplicates, invalid-input).
+- Deterministic runner reuses `runTrace`; pass/fail never comes from AI.
+- Results dashboard, progressive failure hints, **Debug this failure** loads the case into the debugger.
+- Custom tests with validation.
+
 **Backend**
 - `GET /api/health`, `POST /api/tutor` (validated with zod, size-limited, CORS locked to the frontend origin)
 
@@ -93,3 +99,4 @@ against the real execution.
 | 2 | Predict mode, flag the bug, repo split into frontend/backend (done) |
 | 3 | Fix options with re-run verification, before/after trace comparison (done) |
 | 4 | Break It mode, assumptions challenge, AI tutor button, polish, demo script (done) |
+| 5 | Smart Test Cases suite, dashboard, Debug this failure, custom tests (done) |
