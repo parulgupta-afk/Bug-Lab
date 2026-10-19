@@ -1,0 +1,288 @@
+import { Bug } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { ArrayView } from './components/ArrayView'
+import { ChallengeList } from './components/ChallengeList'
+import { CodePanel } from './components/CodePanel'
+import { Controls } from './components/Controls'
+import { FeedbackPanel } from './components/FeedbackPanel'
+import { FlagPanel } from './components/FlagPanel'
+import { ObjectivePanel } from './components/ObjectivePanel'
+import { PredictionPanel } from './components/PredictionPanel'
+import { TraceTable } from './components/TraceTable'
+import { VariableInspector } from './components/VariableInspector'
+import { buildSource, runTrace } from './engine/binarySearch'
+import { CHALLENGES, getChallenge } from './engine/challenges'
+import type { Challenge } from './engine/challenges'
+import { evaluateFlag, isSolved } from './engine/flagging'
+import type { FlagResult } from './engine/flagging'
+import { evaluateFix, getFixOptions, summarizeTrace } from './engine/fixing'
+import type { FixResult } from './engine/fixing'
+import { getPrediction, scoreAnswers } from './engine/predict'
+import type { Answer } from './engine/predict'
+import { FixPanel } from './components/FixPanel'
+
+type Mode = 'explore' | 'predict'
+
+type DebuggerProps = {
+  challenge: Challenge
+  solved: boolean
+  onSolved: () => void
+}
+
+function Debugger({ challenge, solved, onSolved }: DebuggerProps) {
+  // The whole run is computed once from the engine; the UI only ever reads snapshots from it.
+  const trace = useMemo(() => runTrace(challenge.array, challenge.target, challenge.buggy), [challenge])
+  const source = useMemo(() => buildSource(challenge.buggy), [challenge])
+  const predictions = useMemo(
+    () => trace.states.map((_, i) => getPrediction(trace.states, challenge.buggy, i)),
+    [trace, challenge],
+  )
+
+  const lastStep = trace.states.length - 1
+  const [stepIndex, setStepIndex] = useState(0)
+  const [playing, setPlaying] = useState(false)
+  const [speedMs, setSpeedMs] = useState(800)
+
+  const [mode, setMode] = useState<Mode>('explore')
+  const [answers, setAnswers] = useState<Record<number, Answer>>({})
+
+  const [suspectLine, setSuspectLine] = useState<number | null>(null)
+  const [flagResult, setFlagResult] = useState<FlagResult | null>(null)
+  const [wrongAttempts, setWrongAttempts] = useState(0)
+
+  const fixOptions = useMemo(() => getFixOptions(challenge), [challenge])
+  const [selectedFixId, setSelectedFixId] = useState<string | null>(null)
+  const [fixResult, setFixResult] = useState<FixResult | null>(null)
+  const beforeSummary = useMemo(() => summarizeTrace(trace), [trace])
+  const afterSummary = fixResult ? summarizeTrace(fixResult.fixedTrace) : null
+
+  // In predict mode the student cannot move past a question they have not answered (or skipped).
+  const firstUnanswered = predictions.findIndex((p, i) => p !== null && answers[i] === undefined)
+  const maxStep = mode === 'predict' && firstUnanswered !== -1 ? firstUnanswered : lastStep
+
+  const state = trace.states[stepIndex]
+  const previous = stepIndex > 0 ? trace.states[stepIndex - 1] : null
+  const prediction = mode === 'predict' ? predictions[stepIndex] : null
+  const score = scoreAnswers(answers)
+
+  const next = useCallback(() => setStepIndex((i) => Math.min(i + 1, maxStep)), [maxStep])
+  const prev = useCallback(() => {
+    setPlaying(false)
+    setStepIndex((i) => Math.max(i - 1, 0))
+  }, [])
+  const reset = useCallback(() => {
+    setPlaying(false)
+    setStepIndex(0)
+    setAnswers({})
+  }, [])
+  const togglePlay = useCallback(() => {
+    if (stepIndex >= maxStep) return
+    setPlaying((p) => !p)
+  }, [stepIndex, maxStep])
+  const scrub = useCallback(
+    (i: number) => {
+      setPlaying(false)
+      setStepIndex(Math.min(i, maxStep))
+    },
+    [maxStep],
+  )
+
+  const switchMode = (m: Mode) => {
+    if (m === mode) return
+    setMode(m)
+    setAnswers({})
+    setPlaying(false)
+    setStepIndex(0)
+  }
+
+  const answer = (choice: string | null) => {
+    const p = predictions[stepIndex]
+    if (!p) return
+    setAnswers((a) => ({ ...a, [stepIndex]: { choice, correct: choice !== null && choice === p.correctId } }))
+  }
+
+  const selectLine = (line: number) => {
+    setSuspectLine((cur) => (cur === line ? null : line))
+    setFlagResult(null)
+  }
+
+  const flag = () => {
+    if (suspectLine === null) return
+    const result = evaluateFlag(challenge, trace, stepIndex, suspectLine, wrongAttempts)
+    setFlagResult(result)
+    if (result.verdict === 'wrong-line') setWrongAttempts((n) => n + 1)
+    if (isSolved(result.verdict)) onSolved()
+  }
+
+  const applyFix = () => {
+    if (selectedFixId === null) return
+    const option = fixOptions.find((o) => o.id === selectedFixId)
+    if (!option) return
+    setFixResult(evaluateFix(challenge, option))
+  }
+
+  // Autoplay: one timer per step. When the next step is locked behind a question (or is the last
+  // step), playback stops itself on arrival instead of resuming later without being asked.
+  useEffect(() => {
+    if (!playing || stepIndex >= maxStep) return
+    const id = window.setTimeout(() => {
+      if (stepIndex + 1 >= maxStep) setPlaying(false)
+      setStepIndex(stepIndex + 1)
+    }, speedMs)
+    return () => window.clearTimeout(id)
+  }, [playing, stepIndex, maxStep, speedMs])
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement
+      if (target.tagName === 'SELECT' || target.tagName === 'INPUT' || e.metaKey || e.ctrlKey || e.altKey) return
+      if (e.key === 'ArrowRight') {
+        e.preventDefault()
+        next()
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault()
+        prev()
+      } else if (e.key === ' ' && target.tagName !== 'BUTTON' && target.getAttribute('role') !== 'button') {
+        e.preventDefault()
+        togglePlay()
+      } else if ((e.key === 'r' || e.key === 'R') && target.getAttribute('role') !== 'button') {
+        reset()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [next, prev, togglePlay, reset])
+
+  return (
+    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+      <div className="space-y-4">
+        <ObjectivePanel key={challenge.id} challenge={challenge} />
+        <CodePanel
+          lines={source}
+          activeLine={state.line}
+          suspectLine={suspectLine}
+          bugLine={solved ? challenge.bugLine : null}
+          onSelectLine={solved ? undefined : selectLine}
+        />
+      </div>
+
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div role="group" aria-label="Learning mode" className="inline-flex rounded-lg border border-slate-700 bg-slate-900 p-0.5">
+            {(['explore', 'predict'] as const).map((m) => (
+              <button
+                key={m}
+                onClick={() => switchMode(m)}
+                aria-pressed={mode === m}
+                className={`rounded-md px-3 py-1.5 text-sm font-medium capitalize transition focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
+                  mode === m ? 'bg-sky-500/25 text-sky-100' : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                {m}
+              </button>
+            ))}
+          </div>
+          {mode === 'predict' && (
+            <span className="rounded-md border border-slate-700 px-2.5 py-1 font-mono text-xs text-slate-300">
+              Predictions: {score.correct}/{score.answered} correct
+              {score.skipped > 0 ? ` · ${score.skipped} skipped` : ''}
+            </span>
+          )}
+        </div>
+
+        <ArrayView state={state} />
+        <VariableInspector state={state} previous={previous} />
+        {mode === 'predict' && (
+          <PredictionPanel
+            key={stepIndex}
+            prediction={prediction}
+            answer={answers[stepIndex]}
+            onAnswer={(id) => answer(id)}
+            onSkip={() => answer(null)}
+          />
+        )}
+        <Controls
+          stepIndex={stepIndex}
+          lastStep={lastStep}
+          maxStep={maxStep}
+          playing={playing}
+          speedMs={speedMs}
+          onPrev={prev}
+          onNext={next}
+          onTogglePlay={togglePlay}
+          onReset={reset}
+          onScrub={scrub}
+          onSpeed={setSpeedMs}
+        />
+        <FeedbackPanel state={state} failure={trace.failure} isLastStep={stepIndex === lastStep} />
+        <FlagPanel
+          suspectLine={suspectLine}
+          stepIndex={stepIndex}
+          result={flagResult}
+          solved={solved}
+          explanation={challenge.explanation}
+          onFlag={flag}
+        />
+        <FixPanel
+          unlocked={solved}
+          options={fixOptions}
+          selectedId={selectedFixId}
+          result={fixResult}
+          before={beforeSummary}
+          after={afterSummary}
+          onSelect={(id) => {
+            setSelectedFixId(id)
+            setFixResult(null)
+          }}
+          onApply={applyFix}
+        />
+        <TraceTable states={trace.states} stepIndex={stepIndex} onSelect={scrub} />
+      </div>
+    </div>
+  )
+}
+
+export default function App() {
+  const [challengeId, setChallengeId] = useState(CHALLENGES[0].id)
+  const [solvedIds, setSolvedIds] = useState<string[]>([])
+  const challenge = getChallenge(challengeId)
+
+  return (
+    <div className="min-h-screen">
+      <header className="border-b border-slate-800 bg-[#0b1226]">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-rose-500/15 text-rose-300">
+              <Bug size={20} />
+            </div>
+            <div>
+              <h1 className="text-lg font-bold leading-tight text-slate-50">Bug Lab</h1>
+              <p className="text-xs text-slate-400">Don't just write code. Break it. Trace it. Fix it. Understand it.</p>
+            </div>
+          </div>
+          <span className="hidden rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-400 sm:inline">
+            Binary search debugger
+          </span>
+        </div>
+      </header>
+
+      <main className="mx-auto grid max-w-7xl gap-4 px-4 py-4 lg:grid-cols-[260px_minmax(0,1fr)]">
+        <aside>
+          <ChallengeList
+            challenges={CHALLENGES}
+            selectedId={challengeId}
+            solvedIds={solvedIds}
+            onSelect={setChallengeId}
+          />
+        </aside>
+        {/* key resets all stepping state whenever a different challenge is chosen */}
+        <Debugger
+          key={challenge.id}
+          challenge={challenge}
+          solved={solvedIds.includes(challenge.id)}
+          onSolved={() => setSolvedIds((ids) => (ids.includes(challenge.id) ? ids : [...ids, challenge.id]))}
+        />
+      </main>
+    </div>
+  )
+}
