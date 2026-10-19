@@ -149,18 +149,33 @@ describe('wrong result detection', () => {
 
 describe('challenge configs', () => {
   for (const challenge of CHALLENGES) {
+    const isInputAssumption =
+      challenge.buggy.loop === challenge.fixed.loop &&
+      challenge.buggy.highUpdate === challenge.fixed.highUpdate
+
     it(`"${challenge.title}" really breaks with its buggy code on its own input`, () => {
       const trace = runTrace(challenge.array, challenge.target, challenge.buggy)
       expect(trace.failure?.kind).toBe(challenge.failureKind)
     })
 
     it(`"${challenge.title}" is fixed by the correct code on the same input`, () => {
+      if (isInputAssumption) {
+        // Failure comes from unsorted input; the fixed variant is the same algorithm.
+        const trace = runTrace(challenge.array, challenge.target, challenge.fixed)
+        expect(trace.failure?.kind).toBe(challenge.failureKind)
+        return
+      }
       const trace = runTrace(challenge.array, challenge.target, challenge.fixed)
       expect(trace.failure).toBeNull()
       expect(isCorrectResult(challenge.array, challenge.target, trace.result as number)).toBe(true)
     })
 
     it(`"${challenge.title}" has its bug on a real line that differs between buggy and fixed code`, () => {
+      if (isInputAssumption) {
+        // No source diff — the teaching point is the sorted-input precondition.
+        expect(challenge.bugLine).toBeGreaterThan(0)
+        return
+      }
       const buggy = buildSource(challenge.buggy)
       const fixed = buildSource(challenge.fixed)
       expect(buggy[challenge.bugLine - 1]).not.toBe(fixed[challenge.bugLine - 1])
@@ -172,4 +187,14 @@ describe('challenge configs', () => {
       expect(challenge.hints).toHaveLength(3)
     })
   }
+})
+
+describe('assumptions challenge input', () => {
+  it('correct algorithm on unsorted array misses a present target', () => {
+    const arr = [18, 3, 7, 24, 12]
+    const target = 3
+    const trace = runTrace(arr, target, { loop: '<=', highUpdate: 'mid-1' })
+    expect(arr.includes(target)).toBe(true)
+    expect(trace.failure?.kind).toBe('wrong-result')
+  })
 })

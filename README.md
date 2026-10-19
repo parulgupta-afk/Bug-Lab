@@ -60,6 +60,15 @@ Without a key the API still starts and `POST /api/tutor` answers `503 ai-disable
 - **Something's wrong**: click the line you suspect, flag it at the step where you can see the problem. The verdict comes from the engine's own failure record: found, found early, too early, or wrong line (with a focusing hint after the first miss).
 - Solved challenges get a tick in the sidebar and the bug line is revealed with an explanation.
 
+**Phase 3: fix + verify**
+- After locating the bug, choose a concrete fix; the engine re-runs the algorithm and accepts only a real passing trace.
+- Before/after comparison of steps, result, and failure.
+
+**Phase 4: Break It + tutor**
+- Break It mode: edit array/target, presets (sorted found / sorted missing / unsorted).
+- Third challenge: *Break the Assumptions* (correct code on unsorted input).
+- Optional AI tutor (`POST /api/tutor`); core experience works offline.
+
 **Backend**
 - `GET /api/health`, `POST /api/tutor` (validated with zod, size-limited, CORS locked to the frontend origin)
 
@@ -82,5 +91,5 @@ against the real execution.
 |-------|-------|
 | 1 | Setup, execution engine, synchronized debugger (done) |
 | 2 | Predict mode, flag the bug, repo split into frontend/backend (done) |
-| 3 | Fix options with re-run verification, before/after trace comparison |
-| 4 | Break It mode (edit array and target, unsorted-array challenge), AI tutor button, polish, demo script |
+| 3 | Fix options with re-run verification, before/after trace comparison (done) |
+| 4 | Break It mode, assumptions challenge, AI tutor button, polish, demo script (done) |

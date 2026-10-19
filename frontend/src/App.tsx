@@ -20,6 +20,27 @@ import type { FixResult } from './engine/fixing'
 import { getPrediction, scoreAnswers } from './engine/predict'
 import type { Answer } from './engine/predict'
 import { FixPanel } from './components/FixPanel'
+import { BreakItPanel } from './components/BreakItPanel'
+import { TutorPanel } from './components/TutorPanel'
+
+
+function isSorted(arr: readonly number[]): boolean {
+  for (let i = 1; i < arr.length; i++) {
+    if (arr[i]! < arr[i - 1]!) return false
+  }
+  return true
+}
+
+function parseArrayInput(raw: string): number[] | null {
+  const parts = raw
+    .split(/[\s,]+/)
+    .map((p) => p.trim())
+    .filter(Boolean)
+  if (parts.length === 0) return null
+  const nums = parts.map((p) => Number(p))
+  if (nums.some((n) => !Number.isFinite(n))) return null
+  return nums
+}
 
 type Mode = 'explore' | 'predict'
 
@@ -30,12 +51,24 @@ type DebuggerProps = {
 }
 
 function Debugger({ challenge, solved, onSolved }: DebuggerProps) {
+  const [breakOpen, setBreakOpen] = useState(false)
+  const [arrayInput, setArrayInput] = useState(() => challenge.array.join(', '))
+  const [targetInput, setTargetInput] = useState(() => String(challenge.target))
+  const [breakError, setBreakError] = useState('')
+  const [runtime, setRuntime] = useState<{ array: number[]; target: number } | null>(null)
+
+  const array = runtime?.array ?? challenge.array
+  const target = runtime?.target ?? challenge.target
+  // Assumptions challenge already uses the correct algorithm; others stay buggy until fixed elsewhere.
+  const variant = challenge.buggy
+  const sorted = useMemo(() => isSorted(array), [array])
+
   // The whole run is computed once from the engine; the UI only ever reads snapshots from it.
-  const trace = useMemo(() => runTrace(challenge.array, challenge.target, challenge.buggy), [challenge])
-  const source = useMemo(() => buildSource(challenge.buggy), [challenge])
+  const trace = useMemo(() => runTrace(array, target, variant), [array, target, variant])
+  const source = useMemo(() => buildSource(variant), [variant])
   const predictions = useMemo(
-    () => trace.states.map((_, i) => getPrediction(trace.states, challenge.buggy, i)),
-    [trace, challenge],
+    () => trace.states.map((_, i) => getPrediction(trace.states, variant, i)),
+    [trace, variant],
   )
 
   const lastStep = trace.states.length - 1
@@ -118,7 +151,54 @@ function Debugger({ challenge, solved, onSolved }: DebuggerProps) {
     if (selectedFixId === null) return
     const option = fixOptions.find((o) => o.id === selectedFixId)
     if (!option) return
+    // evaluateFix always uses the challenge's original test input
     setFixResult(evaluateFix(challenge, option))
+  }
+
+  const applyBreakInput = () => {
+    const parsed = parseArrayInput(arrayInput)
+    const t = Number(targetInput.trim())
+    if (!parsed) {
+      setBreakError('Enter a comma-separated list of numbers for the array.')
+      return
+    }
+    if (!Number.isFinite(t)) {
+      setBreakError('Target must be a number.')
+      return
+    }
+    setBreakError('')
+    setRuntime({ array: parsed, target: t })
+    setPlaying(false)
+    setStepIndex(0)
+    setAnswers({})
+    setSuspectLine(null)
+    setFlagResult(null)
+    setFixResult(null)
+  }
+
+  const applyPreset = (preset: 'sorted' | 'missing' | 'unsorted') => {
+    if (preset === 'sorted') {
+      setArrayInput('3, 8, 14, 21, 29, 34, 42, 57')
+      setTargetInput('21')
+    } else if (preset === 'missing') {
+      setArrayInput('3, 8, 14, 21, 29, 34, 42, 57')
+      setTargetInput('15')
+    } else {
+      setArrayInput('18, 3, 7, 24, 12')
+      setTargetInput('3')
+    }
+    setBreakError('')
+  }
+
+  const closeBreak = () => {
+    setBreakOpen(false)
+    setRuntime(null)
+    setArrayInput(challenge.array.join(', '))
+    setTargetInput(String(challenge.target))
+    setBreakError('')
+    setPlaying(false)
+    setStepIndex(0)
+    setAnswers({})
   }
 
   // Autoplay: one timer per step. When the next step is locked behind a question (or is the last
@@ -190,6 +270,26 @@ function Debugger({ challenge, solved, onSolved }: DebuggerProps) {
           )}
         </div>
 
+        <div className="flex flex-wrap items-center gap-2">
+          <BreakItPanel
+            open={breakOpen}
+            arrayInput={arrayInput}
+            targetInput={targetInput}
+            error={breakError}
+            sorted={runtime ? sorted : null}
+            onArrayChange={setArrayInput}
+            onTargetChange={setTargetInput}
+            onPreset={applyPreset}
+            onApply={applyBreakInput}
+            onClose={closeBreak}
+            onOpen={() => setBreakOpen(true)}
+          />
+          {runtime && (
+            <span className="font-mono text-[10px] text-[var(--quiet)]">
+              custom input · target {target}
+            </span>
+          )}
+        </div>
         <ArrayView state={state} />
         <VariableInspector state={state} previous={previous} />
         {mode === 'predict' && (
@@ -236,6 +336,7 @@ function Debugger({ challenge, solved, onSolved }: DebuggerProps) {
           }}
           onApply={applyFix}
         />
+        <TutorPanel challengeTitle={challenge.title} code={source} state={state} />
         <TraceTable states={trace.states} stepIndex={stepIndex} onSelect={scrub} />
       </div>
     </div>
@@ -274,7 +375,7 @@ export default function App() {
             Session · Local
           </span>
           <span className="rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-3 py-1 font-mono text-[10px] text-[var(--muted)]">
-            Phase 3
+            Phase 4
           </span>
         </div>
       </header>

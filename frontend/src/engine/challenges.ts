@@ -69,6 +69,29 @@ export const CHALLENGES: Challenge[] = [
     explanation:
       'When low == high, the window holds exactly one element that has not been checked yet. The condition low < high ends the loop before looking at it. low <= high keeps the loop running until the window is truly empty.',
   },
+  {
+    id: 'assumptions',
+    number: '03',
+    title: 'Break the Assumptions',
+    difficulty: 'Intermediate',
+    summary: 'The code is fine. The input is not. Binary search silently misbehaves on unsorted data.',
+    objective:
+      'Search for 3 in an unsorted array. The algorithm returns -1 even though 3 is present. Discover which decision relies on the sorted-input assumption.',
+    array: [18, 3, 7, 24, 12],
+    target: 3,
+    // Correct algorithm — the failure comes from the input, not a coding bug.
+    buggy: FIXED,
+    fixed: FIXED,
+    failureKind: 'wrong-result',
+    bugLine: LINE.lessThan,
+    hints: [
+      'The program finished without hanging. Look at whether the returned answer matches reality.',
+      'When the algorithm discards a half, it is trusting that every value on that side is ordered relative to mid.',
+      'Is the array sorted? Binary search is only valid when that precondition holds.',
+    ],
+    explanation:
+      'Binary search eliminates half the range using comparisons that are only valid on sorted data. On an unsorted array those eliminations can discard the target. The code is not wrong — the assumption is. Sort the input before searching.',
+  },
 ]
 
 export function getChallenge(id: string): Challenge {

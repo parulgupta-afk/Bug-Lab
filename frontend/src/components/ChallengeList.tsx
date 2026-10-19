@@ -47,7 +47,7 @@ export function ChallengeList({ challenges, selectedId, solvedIds, onSelect }: P
       </ul>
       <p className="mt-3 flex items-start gap-2 px-1 text-[11px] leading-snug text-[var(--quiet)]">
         <Bug size={13} className="mt-0.5 shrink-0 text-violet" />
-        Phase 3: locate the bug, then apply a fix and verify by re-running.
+        Phase 4: Break It mode, assumptions challenge, optional AI tutor.
       </p>
     </nav>
   )
