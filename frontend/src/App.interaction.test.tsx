@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 
 // jsdom does not implement scrollIntoView (the trace table calls it in real browsers)
@@ -9,6 +9,10 @@ Element.prototype.scrollIntoView = () => {}
 afterEach(() => {
   cleanup()
   vi.useRealTimers()
+})
+
+beforeEach(() => {
+  window.history.replaceState({}, '', '/lab')
 })
 
 const tick = (times: number, ms = 800) => {

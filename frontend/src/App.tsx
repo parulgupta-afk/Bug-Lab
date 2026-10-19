@@ -1,4 +1,5 @@
 import { Bug } from 'lucide-react'
+import { LandingPage } from './components/LandingPage'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ArrayView } from './components/ArrayView'
 import { ChallengeList } from './components/ChallengeList'
@@ -366,14 +367,41 @@ function Debugger({ challenge, solved, onSolved }: DebuggerProps) {
 }
 
 export default function App() {
+  const [view, setView] = useState<'landing' | 'workspace'>(() => {
+    if (typeof window === 'undefined') return 'workspace'
+    return window.location.pathname === '/lab' ? 'workspace' : 'landing'
+  })
   const [challengeId, setChallengeId] = useState(CHALLENGES[0].id)
   const [solvedIds, setSolvedIds] = useState<string[]>([])
   const challenge = getChallenge(challengeId)
 
+  const enterLab = () => {
+    setView('workspace')
+    if (typeof window !== 'undefined' && window.history?.pushState) {
+      window.history.pushState({}, '', '/lab')
+    }
+  }
+
+  const returnHome = () => {
+    setView('landing')
+    if (typeof window !== 'undefined' && window.history?.pushState) {
+      window.history.pushState({}, '', '/')
+    }
+  }
+
+  if (view === 'landing') {
+    return <LandingPage onEnterLab={enterLab} />
+  }
+
   return (
     <div className="app-shell">
       <header className="topbar">
-        <div className="flex items-center gap-3 min-w-0">
+        <button
+          type="button"
+          onClick={returnHome}
+          className="flex items-center gap-3 min-w-0 rounded-lg text-left hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet"
+          aria-label="Back to Bug Lab home"
+        >
           <div className="brand-mark">
             <Bug size={18} />
           </div>
@@ -385,7 +413,7 @@ export default function App() {
               Debug the algorithm
             </p>
           </div>
-        </div>
+        </button>
         <nav className="hidden items-center gap-2 font-mono text-[10px] uppercase tracking-[0.11em] text-[var(--quiet)] md:flex">
           <span>Challenges</span>
           <span className="text-[#3d4357]">/</span>
