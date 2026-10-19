@@ -1,3 +1,4 @@
+import type { LucideIcon } from 'lucide-react'
 import {
   ArrowRight,
   ArrowUpRight,
@@ -6,9 +7,15 @@ import {
   Compass,
   GitBranch,
   Layers3,
+  Lightbulb,
   Rocket,
+  ScanSearch,
+  Search,
+  ShieldCheck,
+  Sparkles,
   Target,
   TriangleAlert,
+  Wrench,
 } from 'lucide-react'
 
 export function LandingPage({ onEnterLab }: { onEnterLab: () => void }) {
