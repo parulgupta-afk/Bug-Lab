@@ -20,9 +20,9 @@ export function TraceTable({ states, stepIndex, onSelect }: Props) {
   const visible = states.slice(0, stepIndex + 1)
 
   return (
-    <section aria-label="Execution trace" className="rounded-xl border border-slate-800 bg-[#0d1426]">
+    <section aria-label="Execution trace" className="rounded-xl border border-[var(--border)] bg-[var(--surface)]">
       <header className="flex items-center justify-between border-b border-slate-800 px-4 py-2.5">
-        <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-400">Trace so far</h2>
+        <h2 className="eyebrow">Trace so far</h2>
         <span className="text-[11px] text-slate-500">Click a row to jump back</span>
       </header>
       <div className="max-h-56 overflow-y-auto">

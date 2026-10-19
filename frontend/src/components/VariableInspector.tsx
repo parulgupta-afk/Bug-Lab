@@ -27,8 +27,8 @@ export function VariableInspector({ state, previous }: Props) {
   const midValue = state.mid !== null ? state.array[state.mid] : undefined
 
   return (
-    <section aria-label="Variables" className="rounded-xl border border-slate-800 bg-[#0d1426] p-4">
-      <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-slate-400">Variables</h2>
+    <section aria-label="Variables" className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
+      <h2 className="mb-3 eyebrow">Variables</h2>
       <div className="grid grid-cols-3 gap-3">
         <Cell name="low" value={state.low} changed={changed('low')} />
         <Cell

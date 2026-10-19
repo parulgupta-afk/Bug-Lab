@@ -7,8 +7,8 @@ export function ObjectivePanel({ challenge }: { challenge: Challenge }) {
   const hasMore = shown < challenge.hints.length
 
   return (
-    <section aria-label="Debugging objective" className="rounded-xl border border-slate-800 bg-[#0d1426] p-4">
-      <h2 className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-slate-400">
+    <section aria-label="Debugging objective" className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
+      <h2 className="mb-2 flex items-center gap-2 eyebrow">
         <Target size={14} /> Debugging objective
       </h2>
       <p className="text-sm leading-relaxed text-slate-200">{challenge.objective}</p>

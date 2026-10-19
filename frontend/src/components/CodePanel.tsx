@@ -35,9 +35,9 @@ function highlight(text: string) {
 
 export function CodePanel({ lines, activeLine, suspectLine = null, bugLine = null, onSelectLine }: Props) {
   return (
-    <section aria-label="Source code" className="rounded-xl border border-slate-800 bg-[#0d1426]">
-      <header className="flex items-center justify-between border-b border-slate-800 px-4 py-2.5">
-        <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-400">Source code</h2>
+    <section aria-label="Source code" className="panel-card overflow-hidden">
+      <header className="panel-header">
+        <h2 className="eyebrow">Source code</h2>
         <span className="font-mono text-xs text-slate-500">
           {onSelectLine ? 'Click a line to mark it as suspect' : 'binarySearch.js'}
         </span>
@@ -51,9 +51,9 @@ export function CodePanel({ lines, activeLine, suspectLine = null, bugLine = nul
           const clickable = Boolean(onSelectLine) && text.trim().length > 0
 
           let tone = 'border-transparent'
-          if (isBug) tone = 'border-emerald-400 bg-emerald-400/10'
-          else if (active) tone = 'border-amber-400 bg-amber-400/10'
-          else if (suspect) tone = 'border-rose-400 bg-rose-400/10'
+          if (isBug) tone = 'code-line-bug'
+          else if (active) tone = 'code-line-active'
+          else if (suspect) tone = 'code-line-suspect'
 
           return (
             <div

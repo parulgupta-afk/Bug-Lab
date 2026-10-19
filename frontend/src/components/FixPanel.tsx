@@ -16,9 +16,9 @@ type Props = {
 function Stat({ label, value, highlight }: { label: string; value: string; highlight?: 'good' | 'bad' | 'neutral' }) {
   const color =
     highlight === 'good'
-      ? 'text-emerald-300'
+      ? 'text-mint'
       : highlight === 'bad'
-        ? 'text-rose-300'
+        ? 'text-[var(--red)]'
         : 'text-slate-200'
   return (
     <div className="rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2">
@@ -40,8 +40,8 @@ export function FixPanel({
 }: Props) {
   if (!unlocked) {
     return (
-      <section aria-label="Fix the bug" className="rounded-xl border border-slate-800 bg-[#0d1426] p-4 opacity-60">
-        <h2 className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-slate-400">
+      <section aria-label="Fix the bug" className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 opacity-60">
+        <h2 className="mb-2 flex items-center gap-2 eyebrow">
           <Wrench size={14} /> Fix the bug
         </h2>
         <p className="text-sm text-slate-400">Locate the bug first, then you can try a fix and verify it by re-running.</p>
@@ -52,8 +52,8 @@ export function FixPanel({
   const fixedOk = result?.verdict === 'correct'
 
   return (
-    <section aria-label="Fix the bug" className="rounded-xl border border-slate-800 bg-[#0d1426] p-4">
-      <h2 className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-slate-400">
+    <section aria-label="Fix the bug" className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
+      <h2 className="mb-2 flex items-center gap-2 eyebrow">
         <Wrench size={14} /> Fix the bug
       </h2>
       <p className="mb-3 text-sm text-slate-300">
@@ -69,7 +69,7 @@ export function FixPanel({
               key={opt.id}
               className={`flex cursor-pointer gap-3 rounded-lg border p-3 transition ${
                 selected
-                  ? 'border-sky-400/60 bg-sky-500/10'
+                  ? 'border-violet/50 bg-violet/10'
                   : 'border-slate-700 bg-slate-900/40 hover:border-slate-600'
               } ${fixedOk ? 'cursor-default' : ''}`}
             >
@@ -79,7 +79,7 @@ export function FixPanel({
                 value={opt.id}
                 checked={selected}
                 onChange={() => onSelect(opt.id)}
-                className="mt-1 accent-sky-400"
+                className="mt-1 accent-[var(--purple)]"
               />
               <div>
                 <p className="font-mono text-sm font-semibold text-slate-100">{opt.label}</p>
@@ -94,7 +94,7 @@ export function FixPanel({
         <button
           onClick={onApply}
           disabled={selectedId === null}
-          className="mt-3 inline-flex items-center gap-2 rounded-lg border border-emerald-400/60 bg-emerald-500/15 px-3 py-2 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-500/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-emerald-500/15"
+          className="mt-3 inline-flex items-center gap-2 rounded-lg border border-[rgba(140,232,190,0.55)] bg-[rgba(140,232,190,0.12)] px-3 py-2 text-sm font-semibold text-[#ecfdf5] transition hover:bg-[rgba(140,232,190,0.2)] focus:outline-none focus-visible:ring-2 focus-visible:ring-mint disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-[rgba(140,232,190,0.12)]"
         >
           <Wrench size={15} /> Apply &amp; verify
         </button>
@@ -105,14 +105,14 @@ export function FixPanel({
           aria-live="polite"
           className={`mt-3 flex gap-3 rounded-lg border p-3 ${
             result.verdict === 'correct'
-              ? 'border-emerald-500/50 bg-emerald-500/10'
-              : 'border-rose-500/50 bg-rose-500/10'
+              ? 'border-[rgba(140,232,190,0.45)] bg-[rgba(140,232,190,0.1)]'
+              : 'border-[rgba(241,143,154,0.45)] bg-[rgba(241,143,154,0.1)]'
           }`}
         >
           {result.verdict === 'correct' ? (
-            <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-emerald-400" />
+            <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-mint" />
           ) : (
-            <XCircle size={18} className="mt-0.5 shrink-0 text-rose-400" />
+            <XCircle size={18} className="mt-0.5 shrink-0 text-[var(--red)]" />
           )}
           <p className="text-sm text-slate-100">{result.message}</p>
         </div>
@@ -120,12 +120,12 @@ export function FixPanel({
 
       {after && (
         <div className="mt-4">
-          <h3 className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-slate-400">
+          <h3 className="mb-2 flex items-center gap-2 eyebrow">
             <GitCompareArrows size={14} /> Before / after
           </h3>
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-2">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-rose-300/80">Buggy run</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-[rgba(241,143,154,0.85)]">Buggy run</p>
               <Stat label="Steps" value={String(before.steps)} />
               <Stat
                 label="Result"
@@ -139,7 +139,7 @@ export function FixPanel({
               />
             </div>
             <div className="space-y-2">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-emerald-300/80">After fix</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-[rgba(140,232,190,0.85)]">After fix</p>
               <Stat label="Steps" value={String(after.steps)} highlight={after.failed ? 'bad' : 'good'} />
               <Stat
                 label="Result"

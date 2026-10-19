@@ -13,17 +13,17 @@ type Props = {
 
 export function FlagPanel({ suspectLine, stepIndex, result, solved, explanation, onFlag }: Props) {
   return (
-    <section aria-label="Flag the bug" className="rounded-xl border border-slate-800 bg-[#0d1426] p-4">
-      <h2 className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-slate-400">
+    <section aria-label="Flag the bug" className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
+      <h2 className="mb-2 flex items-center gap-2 eyebrow">
         <Flag size={14} /> Found the bug?
       </h2>
 
       {solved ? (
-        <div className="flex gap-3 rounded-lg border border-emerald-500/50 bg-emerald-500/10 p-3">
-          <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-emerald-400" />
-          <div className="text-sm text-emerald-50">
+        <div className="flex gap-3 rounded-lg border border-[rgba(140,232,190,0.45)] bg-[rgba(140,232,190,0.1)] p-3">
+          <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-mint" />
+          <div className="text-sm text-[#ecfdf5]">
             <p className="font-semibold">Bug located</p>
-            <p className="mt-1 text-emerald-100/90">{explanation}</p>
+            <p className="mt-1 text-[#d1fae5]/90">{explanation}</p>
           </div>
         </div>
       ) : (
@@ -36,7 +36,7 @@ export function FlagPanel({ suspectLine, stepIndex, result, solved, explanation,
           <button
             onClick={onFlag}
             disabled={suspectLine === null}
-            className="mt-3 inline-flex items-center gap-2 rounded-lg border border-rose-400/60 bg-rose-500/15 px-3 py-2 text-sm font-semibold text-rose-100 transition hover:bg-rose-500/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-rose-500/15"
+            className="mt-3 inline-flex items-center gap-2 rounded-lg border border-[rgba(241,143,154,0.55)] bg-[rgba(241,143,154,0.12)] px-3 py-2 text-sm font-semibold text-[#ffe4e6] transition hover:bg-[rgba(241,143,154,0.2)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--red)] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-[rgba(241,143,154,0.12)]"
           >
             <Flag size={15} /> Something's wrong
           </button>
@@ -46,14 +46,14 @@ export function FlagPanel({ suspectLine, stepIndex, result, solved, explanation,
               aria-live="polite"
               className={`mt-3 flex gap-3 rounded-lg border p-3 ${
                 result.verdict === 'wrong-line'
-                  ? 'border-rose-500/50 bg-rose-500/10'
-                  : 'border-sky-500/50 bg-sky-500/10'
+                  ? 'border-[rgba(241,143,154,0.45)] bg-[rgba(241,143,154,0.1)]'
+                  : 'border-violet/40 bg-violet/10'
               }`}
             >
               {result.verdict === 'wrong-line' ? (
-                <XCircle size={18} className="mt-0.5 shrink-0 text-rose-400" />
+                <XCircle size={18} className="mt-0.5 shrink-0 text-[var(--red)]" />
               ) : (
-                <Info size={18} className="mt-0.5 shrink-0 text-sky-400" />
+                <Info size={18} className="mt-0.5 shrink-0 text-violet" />
               )}
               <p className="text-sm text-slate-100">{result.message}</p>
             </div>

@@ -11,8 +11,8 @@ type Props = {
 export function PredictionPanel({ prediction, answer, onAnswer, onSkip }: Props) {
   if (!prediction) {
     return (
-      <section aria-label="Prediction" className="rounded-xl border border-slate-800 bg-[#0d1426] p-4">
-        <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-slate-400">
+      <section aria-label="Prediction" className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
+        <h2 className="flex items-center gap-2 eyebrow">
           <BrainCircuit size={14} /> Predict mode
         </h2>
         <p className="mt-2 text-sm text-slate-400">No question for this step. Press Next step to continue.</p>
@@ -69,7 +69,7 @@ export function PredictionPanel({ prediction, answer, onAnswer, onSkip }: Props)
               ? 'border-slate-600 bg-slate-800/50'
               : answer.correct
                 ? 'border-emerald-500/50 bg-emerald-500/10'
-                : 'border-rose-500/50 bg-rose-500/10'
+                : 'border-rose-500/50 bg-[rgba(241,143,154,0.1)]'
           }`}
         >
           {answer.choice === null ? null : answer.correct ? (

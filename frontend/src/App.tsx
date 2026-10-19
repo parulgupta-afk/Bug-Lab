@@ -168,14 +168,14 @@ function Debugger({ challenge, solved, onSolved }: DebuggerProps) {
 
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <div role="group" aria-label="Learning mode" className="inline-flex rounded-lg border border-slate-700 bg-slate-900 p-0.5">
+          <div role="group" aria-label="Learning mode" className="inline-flex rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-0.5">
             {(['explore', 'predict'] as const).map((m) => (
               <button
                 key={m}
                 onClick={() => switchMode(m)}
                 aria-pressed={mode === m}
-                className={`rounded-md px-3 py-1.5 text-sm font-medium capitalize transition focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
-                  mode === m ? 'bg-sky-500/25 text-sky-100' : 'text-slate-400 hover:text-slate-200'
+                className={`rounded-md px-3 py-1.5 text-sm font-medium capitalize transition focus:outline-none focus-visible:ring-2 focus-visible:ring-violet ${
+                  mode === m ? 'mode-pill-active' : 'text-[var(--muted)] hover:text-[var(--text)]'
                 }`}
               >
                 {m}
@@ -248,25 +248,38 @@ export default function App() {
   const challenge = getChallenge(challengeId)
 
   return (
-    <div className="min-h-screen">
-      <header className="border-b border-slate-800 bg-[#0b1226]">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-rose-500/15 text-rose-300">
-              <Bug size={20} />
-            </div>
-            <div>
-              <h1 className="text-lg font-bold leading-tight text-slate-50">Bug Lab</h1>
-              <p className="text-xs text-slate-400">Don't just write code. Break it. Trace it. Fix it. Understand it.</p>
-            </div>
+    <div className="app-shell">
+      <header className="topbar">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="brand-mark">
+            <Bug size={18} />
           </div>
-          <span className="hidden rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-400 sm:inline">
-            Binary search debugger
+          <div className="min-w-0">
+            <h1 className="text-[14px] font-extrabold tracking-[0.1em] text-[#f5f3ff] leading-none">
+              BUG<span className="text-violet">LAB</span>
+            </h1>
+            <p className="mt-1 font-mono text-[9px] uppercase tracking-[0.08em] text-[var(--quiet)]">
+              Debug the algorithm
+            </p>
+          </div>
+        </div>
+        <nav className="hidden items-center gap-2 font-mono text-[10px] uppercase tracking-[0.11em] text-[var(--quiet)] md:flex">
+          <span>Challenges</span>
+          <span className="text-[#3d4357]">/</span>
+          <span className="text-[#bfc6dd]">Binary Search</span>
+        </nav>
+        <div className="ml-auto flex items-center gap-3">
+          <span className="hidden items-center gap-2 font-mono text-[9px] uppercase tracking-[0.1em] text-[var(--quiet)] sm:flex">
+            <span className="live-dot" />
+            Session · Local
+          </span>
+          <span className="rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-3 py-1 font-mono text-[10px] text-[var(--muted)]">
+            Phase 3
           </span>
         </div>
       </header>
 
-      <main className="mx-auto grid max-w-7xl gap-4 px-4 py-4 lg:grid-cols-[260px_minmax(0,1fr)]">
+      <main className="mx-auto grid max-w-7xl gap-4 px-4 py-5 lg:grid-cols-[240px_minmax(0,1fr)]">
         <aside>
           <ChallengeList
             challenges={CHALLENGES}

@@ -20,9 +20,9 @@ export function ArrayView({ state }: Props) {
   const highOff = high !== null && (high < 0 || high >= n)
 
   return (
-    <section aria-label="Array" className="rounded-xl border border-slate-800 bg-[#0d1426] p-4">
+    <section aria-label="Array" className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
       <header className="mb-4 flex items-center justify-between">
-        <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-400">Array</h2>
+        <h2 className="eyebrow">Array</h2>
         <span className="rounded-md border border-sky-500/40 bg-sky-500/10 px-2 py-0.5 font-mono text-xs text-sky-300">
           target = {target}
         </span>
@@ -41,7 +41,7 @@ export function ArrayView({ state }: Props) {
             let box = 'border-slate-700 bg-slate-800/60 text-slate-200'
             if (eliminated) box = 'border-slate-800 bg-slate-900/40 text-slate-600'
             else if (inWindow) box = 'border-sky-500/60 bg-sky-500/10 text-sky-100'
-            if (isMid && !matched) box = 'border-amber-400 bg-amber-400/20 text-amber-100 shadow-[0_0_0_3px_rgba(251,191,36,0.15)]'
+            if (isMid && !matched) box = 'border-cyan/60 bg-cyan/15 shadow-glow-cyan text-amber-100 shadow-[0_0_0_3px_rgba(251,191,36,0.15)]'
             if (matched) box = 'border-emerald-400 bg-emerald-400/20 text-emerald-100 shadow-[0_0_0_3px_rgba(52,211,153,0.2)]'
 
             const tags = pointersAt(state, i)

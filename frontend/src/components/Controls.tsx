@@ -22,7 +22,7 @@ const SPEEDS = [
 ]
 
 const btn =
-  'inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800/70 px-3 py-2 text-sm font-medium text-slate-100 transition hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-slate-800/70'
+  'inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800/70 px-3 py-2 text-sm font-medium text-slate-100 transition hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-slate-800/70'
 
 export function Controls({
   stepIndex,
@@ -39,7 +39,7 @@ export function Controls({
 }: Props) {
   const atEnd = stepIndex >= maxStep
   return (
-    <section aria-label="Debugger controls" className="rounded-xl border border-slate-800 bg-[#0d1426] p-4">
+    <section aria-label="Debugger controls" className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
       <div className="mb-3 flex items-center justify-between">
         <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-400">Execution</h2>
         <span className="font-mono text-xs text-slate-400">
@@ -52,7 +52,7 @@ export function Controls({
           <ChevronLeft size={16} /> Previous
         </button>
         <button
-          className={`${btn} border-sky-500/60 bg-sky-500/20 hover:bg-sky-500/30`}
+          className={`${btn} border-sky-500/60 bg-sky-500/20 hover:bg-violet/30`}
           onClick={onNext}
           disabled={atEnd}
           aria-label="Next step"
@@ -71,7 +71,7 @@ export function Controls({
           <select
             value={speedMs}
             onChange={(e) => onSpeed(Number(e.target.value))}
-            className="rounded-md border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+            className="rounded-md border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet"
           >
             {SPEEDS.map((s) => (
               <option key={s.ms} value={s.ms}>
