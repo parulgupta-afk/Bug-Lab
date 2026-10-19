@@ -15,8 +15,11 @@ import { CHALLENGES, getChallenge } from './engine/challenges'
 import type { Challenge } from './engine/challenges'
 import { evaluateFlag, isSolved } from './engine/flagging'
 import type { FlagResult } from './engine/flagging'
+import { evaluateFix, getFixOptions, summarizeTrace } from './engine/fixing'
+import type { FixResult } from './engine/fixing'
 import { getPrediction, scoreAnswers } from './engine/predict'
 import type { Answer } from './engine/predict'
+import { FixPanel } from './components/FixPanel'
 
 type Mode = 'explore' | 'predict'
 
@@ -46,6 +49,12 @@ function Debugger({ challenge, solved, onSolved }: DebuggerProps) {
   const [suspectLine, setSuspectLine] = useState<number | null>(null)
   const [flagResult, setFlagResult] = useState<FlagResult | null>(null)
   const [wrongAttempts, setWrongAttempts] = useState(0)
+
+  const fixOptions = useMemo(() => getFixOptions(challenge), [challenge])
+  const [selectedFixId, setSelectedFixId] = useState<string | null>(null)
+  const [fixResult, setFixResult] = useState<FixResult | null>(null)
+  const beforeSummary = useMemo(() => summarizeTrace(trace), [trace])
+  const afterSummary = fixResult ? summarizeTrace(fixResult.fixedTrace) : null
 
   // In predict mode the student cannot move past a question they have not answered (or skipped).
   const firstUnanswered = predictions.findIndex((p, i) => p !== null && answers[i] === undefined)
@@ -103,6 +112,13 @@ function Debugger({ challenge, solved, onSolved }: DebuggerProps) {
     setFlagResult(result)
     if (result.verdict === 'wrong-line') setWrongAttempts((n) => n + 1)
     if (isSolved(result.verdict)) onSolved()
+  }
+
+  const applyFix = () => {
+    if (selectedFixId === null) return
+    const option = fixOptions.find((o) => o.id === selectedFixId)
+    if (!option) return
+    setFixResult(evaluateFix(challenge, option))
   }
 
   // Autoplay: one timer per step. When the next step is locked behind a question (or is the last
@@ -206,6 +222,19 @@ function Debugger({ challenge, solved, onSolved }: DebuggerProps) {
           solved={solved}
           explanation={challenge.explanation}
           onFlag={flag}
+        />
+        <FixPanel
+          unlocked={solved}
+          options={fixOptions}
+          selectedId={selectedFixId}
+          result={fixResult}
+          before={beforeSummary}
+          after={afterSummary}
+          onSelect={(id) => {
+            setSelectedFixId(id)
+            setFixResult(null)
+          }}
+          onApply={applyFix}
         />
         <TraceTable states={trace.states} stepIndex={stepIndex} onSelect={scrub} />
       </div>
